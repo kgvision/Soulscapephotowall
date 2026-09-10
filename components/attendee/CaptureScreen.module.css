@@ -70,6 +70,19 @@
   height: 100%;
   object-fit: cover;
 }
+.connecting {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 600 12.5px/1.4 var(--font-mono);
+  letter-spacing: 0.04em;
+  color: var(--color-neutral-300);
+  text-align: center;
+  padding: 24px;
+  pointer-events: none;
+}
 .fallback {
   height: 100%;
   display: flex;

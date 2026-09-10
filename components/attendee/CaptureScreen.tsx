@@ -6,9 +6,14 @@ import styles from "./CaptureScreen.module.css";
 // Keeps the captured frame (and therefore the canvas draw + JPEG encode on
 // tap) fast on phones that would otherwise hand back a multi-megapixel
 // frame — that encode was the "SHOOT does nothing for a few seconds" lag.
-const IDEAL_WIDTH = 1280;
-const IDEAL_HEIGHT = 960;
+// This is enforced here (not via getUserMedia width/height constraints) so
+// asking for a specific resolution can never slow down the camera
+// negotiation itself on devices that don't have a fast path to it.
 const MAX_CAPTURE_EDGE = 1600;
+// If getUserMedia hasn't resolved by this point, stop showing a bare blank
+// box and surface the file-picker fallback instead of leaving the user
+// staring at nothing with no explanation.
+const CONNECT_TIMEOUT_MS = 8000;
 
 function FlipIcon() {
   return (
@@ -58,14 +63,17 @@ export function CaptureScreen({
   useEffect(() => {
     let stream: MediaStream | null = null;
     let stopped = false;
+    const timeout = setTimeout(() => {
+      if (!stopped) setError("Camera is taking a while to connect — choose a photo instead, or keep waiting.");
+    }, CONNECT_TIMEOUT_MS);
     (async () => {
       try {
+        // Bare facingMode only — no width/height ask, so there's nothing here
+        // that could make negotiation slower on a device with a narrower set
+        // of supported modes. The frame gets downscaled at capture time
+        // instead (see MAX_CAPTURE_EDGE).
         stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: { ideal: facing },
-            width: { ideal: IDEAL_WIDTH },
-            height: { ideal: IDEAL_HEIGHT },
-          },
+          video: { facingMode: { ideal: facing } },
           audio: false,
         });
         if (stopped) {
@@ -75,15 +83,18 @@ export function CaptureScreen({
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           await videoRef.current.play();
+          clearTimeout(timeout);
           setError(null);
           setReady(true);
         }
       } catch {
+        clearTimeout(timeout);
         setError("Camera unavailable — choose a photo instead.");
       }
     })();
     return () => {
       stopped = true;
+      clearTimeout(timeout);
       stream?.getTracks().forEach((t) => t.stop());
     };
   }, [facing]);
@@ -127,6 +138,8 @@ export function CaptureScreen({
     e.target.value = "";
   }
 
+  const connecting = !ready && !error;
+
   return (
     <div className={styles.screen} style={hidden ? { display: "none" } : undefined}>
       <div className={styles.topBar}>
@@ -154,7 +167,10 @@ export function CaptureScreen({
             </button>
           </div>
         ) : (
-          <video ref={videoRef} className={styles.video} muted playsInline />
+          <>
+            <video ref={videoRef} className={styles.video} muted playsInline />
+            {connecting && <div className={styles.connecting}>Connecting to camera…</div>}
+          </>
         )}
       </div>
       <canvas ref={canvasRef} style={{ display: "none" }} />
@@ -175,7 +191,7 @@ export function CaptureScreen({
           onClick={ready ? shoot : () => fileInputRef.current?.click()}
           disabled={capturing}
         >
-          {capturing ? "…" : ready ? "SHOOT" : "CHOOSE PHOTO"}
+          {capturing ? "…" : ready ? "SHOOT" : connecting ? "CONNECTING…" : "CHOOSE PHOTO"}
         </button>
       </div>
     </div>
