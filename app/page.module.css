@@ -1,0 +1,19 @@
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--color-bg);
+  position: relative;
+}
+
+.loading {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 600 13px/1.4 var(--font-body);
+  color: var(--color-neutral-600);
+  background: var(--color-bg);
+}

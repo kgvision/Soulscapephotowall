@@ -1,0 +1,179 @@
+.screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.topBar {
+  padding: max(24px, calc(env(safe-area-inset-top) + 12px)) 20px 0;
+  background: var(--color-bg);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.topRow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+}
+
+.kicker {
+  display: block;
+  font: 700 9px/1 var(--font-mono);
+  letter-spacing: 0.18em;
+  color: var(--color-accent-deep);
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.kicker:hover {
+  color: var(--color-accent);
+}
+
+.heading {
+  font: 800 27px/1 var(--font-heading);
+  letter-spacing: -0.03em;
+  margin-top: 5px;
+}
+
+.liveBadge {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 9px;
+  border: 2px solid var(--color-ink);
+  background: #fff;
+}
+.liveDot {
+  width: 7px;
+  height: 7px;
+  background: var(--color-accent);
+}
+.liveCount {
+  font: 700 9.5px/1 var(--font-mono);
+  letter-spacing: 0.1em;
+}
+
+.rule {
+  height: 2px;
+  background: var(--color-ink);
+}
+
+.scroll {
+  flex: 1;
+  overflow: auto;
+  padding: 0 0 96px;
+}
+
+.heroSection {
+  padding: 16px 20px 14px;
+  border-bottom: 2px solid var(--color-divider);
+}
+.heroLabel {
+  font: 700 9px/1 var(--font-mono);
+  letter-spacing: 0.18em;
+  color: var(--color-accent-deep);
+  margin-bottom: 9px;
+}
+.hero {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border: 2px solid var(--color-ink);
+  background: var(--color-neutral-300);
+}
+.heroEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border: 2px solid var(--color-ink);
+  background: var(--color-neutral-200);
+  color: var(--color-neutral-600);
+  font: 500 12px/1.4 var(--font-body);
+  text-align: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+.heroMeta {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 9px;
+}
+.heroAuthor {
+  font: 700 13px/1.3 var(--font-heading);
+}
+.heroAgo {
+  font: 600 10.5px/1.4 var(--font-mono);
+  color: var(--color-neutral-600);
+  margin-left: auto;
+}
+
+.promptBanner {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 13px 20px;
+  background: var(--color-ink);
+  color: #fff;
+}
+.promptTag {
+  font: 700 9px/1 var(--font-mono);
+  letter-spacing: 0.16em;
+  color: var(--color-accent-soft);
+  flex: none;
+}
+.promptText {
+  font: 500 12.5px/1.35 var(--font-heading);
+  flex: 1;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  background: var(--color-divider);
+  padding: 2px 0 0;
+}
+.tile {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: var(--color-neutral-300);
+}
+.tileImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.tileCaption {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  padding: 7px 8px;
+  background: linear-gradient(to top, rgba(32, 30, 29, 0.82), transparent);
+  color: #fff;
+  font: 600 10.5px/1.25 var(--font-heading);
+}
+.gridEmpty {
+  grid-column: 1 / -1;
+  padding: 24px 20px;
+  font: 500 12px/1.5 var(--font-body);
+  color: var(--color-neutral-600);
+  text-align: center;
+  background: var(--color-bg);
+}

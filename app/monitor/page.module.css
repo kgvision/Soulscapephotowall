@@ -1,0 +1,9 @@
+.connecting {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-ink);
+  color: #fff;
+  font: 600 14px/1.4 var(--font-heading);
+}

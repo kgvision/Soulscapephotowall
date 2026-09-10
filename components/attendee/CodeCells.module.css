@@ -1,0 +1,32 @@
+.row {
+  display: flex;
+  gap: 7px;
+  margin-bottom: 20px;
+}
+
+.cell {
+  flex: 1;
+  min-width: 0;
+  aspect-ratio: 1 / 1.15;
+  text-align: center;
+  font: 700 24px/1 ui-monospace, Menlo, monospace;
+  background: #fff;
+  color: #201e1d;
+  border: 2px solid #201e1d;
+  border-radius: 0;
+  padding: 0;
+  text-transform: uppercase;
+}
+
+.cell[data-accent] {
+  border-color: var(--color-accent);
+}
+
+.cell:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.cell:disabled {
+  opacity: 0.6;
+}
