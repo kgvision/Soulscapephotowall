@@ -154,7 +154,7 @@ export function CaptureScreen({
         ) : (
           <video
             ref={videoRef}
-            className={`${styles.video} ${facing === "user" ? styles.mirrored : ""} grayscale`}
+            className={`${styles.video} ${facing === "user" ? styles.mirrored : ""}`}
             muted
             playsInline
           />
