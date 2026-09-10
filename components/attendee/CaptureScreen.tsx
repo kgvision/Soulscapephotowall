@@ -32,11 +32,13 @@ function FlipIcon() {
 }
 
 export function CaptureScreen({
+  hidden = false,
   promptNo,
   promptText,
   onClose,
   onCaptured,
 }: {
+  hidden?: boolean;
   promptNo: number;
   promptText: string;
   onClose: () => void;
@@ -126,7 +128,7 @@ export function CaptureScreen({
   }
 
   return (
-    <div className={styles.screen}>
+    <div className={styles.screen} style={hidden ? { display: "none" } : undefined}>
       <div className={styles.topBar}>
         <button type="button" className={styles.close} onClick={onClose}>
           CLOSE
@@ -152,12 +154,7 @@ export function CaptureScreen({
             </button>
           </div>
         ) : (
-          <video
-            ref={videoRef}
-            className={`${styles.video} ${facing === "user" ? styles.mirrored : ""}`}
-            muted
-            playsInline
-          />
+          <video ref={videoRef} className={styles.video} muted playsInline />
         )}
       </div>
       <canvas ref={canvasRef} style={{ display: "none" }} />

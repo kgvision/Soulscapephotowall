@@ -30,7 +30,7 @@ export function ReviewScreen({
       <div className={styles.rule} />
       <div className={styles.body}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={previewUrl} alt="" className={`${styles.photo} grayscale`} />
+        <img src={previewUrl} alt="" className={styles.photo} />
         <div className={styles.metaRow}>
           <span>SHOWS AS &quot;{myName}&quot;</span>
           <span>PROMPT {String(promptNo).padStart(2, "0")}</span>

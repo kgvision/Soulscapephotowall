@@ -25,6 +25,11 @@ export default function Home() {
   const [submitting, setSubmitting] = useState(false);
   const [postedAuto, setPostedAuto] = useState(true);
   const [ready, setReady] = useState(false);
+  // Once true, CaptureScreen stays mounted (just hidden) for the rest of the
+  // session instead of unmounting on every screen change — that was tearing
+  // the camera stream down and forcing a full reconnect on every reshoot,
+  // which is the real source of the "shoot button is slow" lag.
+  const [cameraEngaged, setCameraEngaged] = useState(false);
 
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect --
@@ -55,6 +60,11 @@ export default function Home() {
     setName(joinedName);
     if (identity) setOwnerId(identity.ownerId);
     setScreen("feed");
+  }
+
+  function openCapture() {
+    setCameraEngaged(true);
+    setScreen("capture");
   }
 
   function handleCaptured(blob: Blob) {
@@ -96,20 +106,8 @@ export default function Home() {
       {screen === "feed" && (
         <>
           <FeedScreen snapshot={state} now={now} onGoHome={() => setScreen("join")} />
-          <BottomNav
-            active="feed"
-            onNavigate={(s) => (s === "capture" ? setScreen("capture") : setScreen(s))}
-          />
+          <BottomNav active="feed" onNavigate={(s) => (s === "capture" ? openCapture() : setScreen(s))} />
         </>
-      )}
-
-      {screen === "capture" && (
-        <CaptureScreen
-          promptNo={state.promptNo}
-          promptText={state.promptText}
-          onClose={() => setScreen("feed")}
-          onCaptured={handleCaptured}
-        />
       )}
 
       {screen === "review" && pending && (
@@ -119,7 +117,7 @@ export default function Home() {
           promptNo={state.promptNo}
           moderationNote={moderationNote}
           submitting={submitting}
-          onReshoot={() => setScreen("capture")}
+          onReshoot={openCapture}
           onPost={handlePost}
         />
       )}
@@ -129,18 +127,25 @@ export default function Home() {
           auto={postedAuto}
           previewUrl={pending.url}
           onWatch={() => setScreen("feed")}
-          onShootAnother={() => setScreen("capture")}
+          onShootAnother={openCapture}
         />
       )}
 
       {screen === "mine" && (
         <>
           <MineScreen snapshot={state} now={now} myName={name} myOwnerId={ownerId} />
-          <BottomNav
-            active="mine"
-            onNavigate={(s) => (s === "capture" ? setScreen("capture") : setScreen(s))}
-          />
+          <BottomNav active="mine" onNavigate={(s) => (s === "capture" ? openCapture() : setScreen(s))} />
         </>
+      )}
+
+      {cameraEngaged && (
+        <CaptureScreen
+          hidden={screen !== "capture"}
+          promptNo={state.promptNo}
+          promptText={state.promptText}
+          onClose={() => setScreen("feed")}
+          onCaptured={handleCaptured}
+        />
       )}
     </div>
   );

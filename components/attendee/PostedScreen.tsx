@@ -27,7 +27,7 @@ export function PostedScreen({
       <h1 className={styles.title}>{title}</h1>
       <p className={styles.body}>{body}</p>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={previewUrl} alt="" className={`${styles.photo} grayscale`} />
+      <img src={previewUrl} alt="" className={styles.photo} />
       <div className={styles.actions}>
         <button type="button" className={styles.watch} style={{ color: bg }} onClick={onWatch}>
           <span>WATCH THE WALL</span>
