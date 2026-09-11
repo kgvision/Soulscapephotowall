@@ -1,12 +1,38 @@
 "use client";
 
+import { useRef, useState } from "react";
+import Link from "next/link";
 import styles from "./StewardView.module.css";
 import type { Snapshot } from "@/lib/snapshot";
 import { formatAgo } from "@/lib/format";
-import { approvePhotoRequest, removePhotoRequest, toggleHoldRequest, pushPromptRequest } from "@/lib/api";
+import {
+  approvePhotoRequest,
+  removePhotoRequest,
+  toggleHoldRequest,
+  pushPromptRequest,
+  uploadPhoto,
+} from "@/lib/api";
+
+const STEWARD_OWNER_ID = "steward-upload";
 
 export function StewardView({ snapshot, now }: { snapshot: Snapshot; now: number }) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const live = snapshot.photos.filter((p) => p.status === "live").length;
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploading(true);
+    setUploadError(null);
+    const res = await uploadPhoto({ code: snapshot.code, author: "STAFF", ownerId: STEWARD_OWNER_ID, blob: file });
+    setUploading(false);
+    if (!res.ok) {
+      setUploadError(res.error ?? "Upload failed.");
+    }
+  }
   const rows = snapshot.photos
     .filter((p) => p.status !== "removed")
     .slice()
@@ -20,8 +46,13 @@ export function StewardView({ snapshot, now }: { snapshot: Snapshot; now: number
     <div className={styles.page}>
       <div className={styles.console}>
         <div className={styles.header}>
-          <div className={styles.title}>STEWARD</div>
-          <div className={styles.subtitle}>SOULSCAPE / WALL 1</div>
+          <Link href="/" className={styles.backBtn}>
+            ← BACK
+          </Link>
+          <div className={styles.titleGroup}>
+            <div className={styles.title}>STEWARD</div>
+            <div className={styles.subtitle}>SOULSCAPE / WALL 1</div>
+          </div>
           <button
             type="button"
             className={styles.holdBtn}
@@ -35,6 +66,24 @@ export function StewardView({ snapshot, now }: { snapshot: Snapshot; now: number
           {snapshot.hold
             ? "Rotation frozen on the current picture. Nothing new reaches the screen until you release."
             : `Rotation running. ${live} picture${live === 1 ? "" : "s"} in the loop, newest first.`}
+        </div>
+        <div className={styles.uploadRow}>
+          <button
+            type="button"
+            className={styles.uploadBtn}
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+          >
+            {uploading ? "UPLOADING…" : "UPLOAD IMAGE"}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            style={{ display: "none" }}
+            onChange={handleFileChange}
+          />
+          {uploadError && <span className={styles.uploadError}>{uploadError}</span>}
         </div>
         <div className={styles.rows}>
           {rows.length === 0 && <div className={styles.empty}>No pictures yet.</div>}
