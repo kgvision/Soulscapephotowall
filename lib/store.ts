@@ -1,4 +1,7 @@
 import { kv } from "./kv";
+import { PROMPTS, promptTextFor } from "./prompts";
+
+export { PROMPTS, promptTextFor };
 
 export type PhotoStatus = "live" | "pending" | "removed";
 
@@ -23,15 +26,6 @@ export interface PublicState {
   heroIndex: number;
   photos: Photo[];
 }
-
-export const PROMPTS = [
-  "The corner everyone photographs.",
-  "Something you'd hang in your own hallway.",
-  "The piece you'd steal if the lights went out.",
-  "A detail nobody else will notice.",
-  "The work that made you stop talking.",
-  "Whatever's got the longest line right now.",
-];
 
 export const SHOW_CODE = "SOUL26";
 
@@ -150,10 +144,6 @@ async function loadPhotos(): Promise<Photo[]> {
 
 export function validateCode(code: string) {
   return code.trim().toUpperCase() === SHOW_CODE;
-}
-
-export function promptTextFor(promptNo: number) {
-  return PROMPTS[(promptNo - 1 + PROMPTS.length) % PROMPTS.length];
 }
 
 export async function getState(): Promise<PublicState> {

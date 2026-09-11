@@ -11,6 +11,7 @@ import { BottomNav } from "@/components/attendee/BottomNav";
 import { useLiveState } from "@/hooks/useLiveState";
 import { loadIdentity } from "@/lib/identity";
 import { uploadPhoto } from "@/lib/api";
+import { PROMPTS } from "@/lib/prompts";
 import styles from "./page.module.css";
 
 type Screen = "join" | "feed" | "capture" | "review" | "posted" | "mine";
@@ -30,6 +31,10 @@ export default function Home() {
   // the camera stream down and forcing a full reconnect on every reshoot,
   // which is the real source of the "shoot button is slow" lag.
   const [cameraEngaged, setCameraEngaged] = useState(false);
+  // Cycles independently of the steward-controlled show prompt so the
+  // camera screen suggests something new each time it's opened, rather than
+  // repeating the same prompt until a steward pushes the next one.
+  const [promptIndex, setPromptIndex] = useState(0);
 
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect --
@@ -61,6 +66,7 @@ export default function Home() {
   }
 
   function openCapture() {
+    setPromptIndex((i) => (i + 1) % PROMPTS.length);
     setCameraEngaged(true);
     setScreen("capture");
   }
@@ -143,8 +149,8 @@ export default function Home() {
       {cameraEngaged && (
         <CaptureScreen
           hidden={screen !== "capture"}
-          promptNo={state.promptNo}
-          promptText={state.promptText}
+          promptNo={promptIndex + 1}
+          promptText={PROMPTS[promptIndex]}
           onClose={() => setScreen("feed")}
           onCaptured={handleCaptured}
         />
