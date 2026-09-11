@@ -85,6 +85,9 @@
   color: var(--color-accent-deep);
   margin-bottom: 9px;
 }
+.heroWrap {
+  position: relative;
+}
 .hero {
   width: 100%;
   aspect-ratio: 4 / 3;

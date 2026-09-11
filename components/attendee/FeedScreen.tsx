@@ -4,6 +4,7 @@ import styles from "./FeedScreen.module.css";
 import type { Snapshot } from "@/lib/snapshot";
 import { heroPhoto, gridPhotos, liveOnly } from "@/lib/deriveView";
 import { formatAgo } from "@/lib/format";
+import { Watermark } from "@/components/shared/Watermark";
 
 export function FeedScreen({
   snapshot,
@@ -40,8 +41,11 @@ export function FeedScreen({
         <div className={styles.heroSection}>
           <div className={styles.heroLabel}>ON SCREEN NOW</div>
           {hero ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={hero.imageUrl} alt="" className={`${styles.hero} grayscale`} />
+            <div className={styles.heroWrap}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={hero.imageUrl} alt="" className={styles.hero} />
+              <Watermark size={44} />
+            </div>
           ) : (
             <div className={styles.heroEmpty}>Waiting for the first picture…</div>
           )}
@@ -64,7 +68,8 @@ export function FeedScreen({
           {grid.map((p) => (
             <div key={p.id} className={styles.tile}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.imageUrl} alt="" className={`${styles.tileImg} grayscale`} />
+              <img src={p.imageUrl} alt="" className={styles.tileImg} />
+              <Watermark size={22} />
               <div className={styles.tileCaption}>
                 {p.author} · {formatAgo(p.createdAt, now)}
               </div>

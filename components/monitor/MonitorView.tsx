@@ -6,6 +6,7 @@ import styles from "./MonitorView.module.css";
 import type { Snapshot } from "@/lib/snapshot";
 import { heroPhoto, queuePhotos, liveOnly } from "@/lib/deriveView";
 import { formatAgo } from "@/lib/format";
+import { Watermark } from "@/components/shared/Watermark";
 
 export function MonitorView({ snapshot, now }: { snapshot: Snapshot; now: number }) {
   const [qr, setQr] = useState<string | null>(null);
@@ -33,8 +34,11 @@ export function MonitorView({ snapshot, now }: { snapshot: Snapshot; now: number
       <div className={styles.body}>
         <div className={styles.heroPanel}>
           {hero ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={hero.imageUrl} alt="" className={`${styles.heroImg} grayscale`} />
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={hero.imageUrl} alt="" className={styles.heroImg} />
+              <Watermark size={72} />
+            </>
           ) : (
             <div className={styles.heroEmpty}>Waiting for the first picture…</div>
           )}
@@ -57,7 +61,8 @@ export function MonitorView({ snapshot, now }: { snapshot: Snapshot; now: number
             {queue.map((p) => (
               <div key={p.id} className={styles.queueItem}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={p.imageUrl} alt="" className={`${styles.queueImg} grayscale`} />
+                <img src={p.imageUrl} alt="" className={styles.queueImg} />
+                <Watermark size={26} />
                 <div className={styles.queueCaption}>{p.author}</div>
               </div>
             ))}

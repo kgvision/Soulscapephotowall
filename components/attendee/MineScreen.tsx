@@ -64,7 +64,7 @@ export function MineScreen({
           return (
             <div key={p.id} className={styles.row}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.imageUrl} alt="" className={`${styles.thumb} grayscale`} />
+              <img src={p.imageUrl} alt="" className={styles.thumb} />
               <div className={styles.rowBody}>
                 <div className={styles.tag} style={{ background: meta.tagBg, color: meta.tagFg }}>
                   {meta.label}

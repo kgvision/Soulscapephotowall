@@ -41,7 +41,7 @@ export function StewardView({ snapshot, now }: { snapshot: Snapshot; now: number
           {rows.map((p) => (
             <div key={p.id} className={styles.row}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.imageUrl} alt="" className={`${styles.thumb} grayscale`} />
+              <img src={p.imageUrl} alt="" className={styles.thumb} />
               <div className={styles.rowBody}>
                 <div className={styles.author}>{p.author}</div>
                 <div className={styles.ago}>
