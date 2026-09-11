@@ -75,6 +75,18 @@ const credentials = resolveCredentials();
 
 if (!g.__soulscapeKv) {
   g.__soulscapeKv = credentials ? new RedisBackend(new Redis(credentials)) : new MemoryBackend();
+  // Runs once per cold instance start — check Vercel's Runtime Logs for this
+  // line to confirm a deploy actually picked up the Redis env vars rather
+  // than silently running on the per-instance in-memory fallback.
+  if (credentials) {
+    console.log("[kv] connected to Redis — shared state backend active");
+  } else {
+    console.warn(
+      "[kv] no Redis credentials found (KV_REST_API_URL/TOKEN or UPSTASH_REDIS_REST_URL/TOKEN) — " +
+        "falling back to a per-instance in-memory store. Fine for local dev, NOT safe on a real " +
+        "multi-instance deployment: connect a Redis integration in the Vercel dashboard's Storage tab.",
+    );
+  }
 }
 
 export const kv: KvBackend = g.__soulscapeKv;

@@ -16,6 +16,18 @@ const EXT_BY_TYPE: Record<string, string> = {
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 const hasBlobToken = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 
+// Runs once per cold instance start — check Vercel's Runtime Logs for this
+// line to confirm a deploy actually picked up BLOB_READ_WRITE_TOKEN rather
+// than silently trying (and failing) to write to the read-only filesystem.
+if (hasBlobToken) {
+  console.log("[photos] using Vercel Blob for storage");
+} else {
+  console.warn(
+    "[photos] no BLOB_READ_WRITE_TOKEN found — falling back to local disk, which will fail on a " +
+      "deployed Vercel serverless function: connect a Blob store in the Vercel dashboard's Storage tab.",
+  );
+}
+
 async function storePhoto(filename: string, bytes: Buffer, contentType: string): Promise<string> {
   if (hasBlobToken) {
     const blob = await put(filename, bytes, { access: "public", contentType, addRandomSuffix: false });
