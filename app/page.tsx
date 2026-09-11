@@ -20,7 +20,6 @@ export default function Home() {
   const [screen, setScreen] = useState<Screen>("join");
   const [name, setName] = useState("");
   const [ownerId, setOwnerId] = useState("");
-  const [initialCode, setInitialCode] = useState("");
   const [pending, setPending] = useState<{ blob: Blob; url: string } | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [postedAuto, setPostedAuto] = useState(true);
@@ -36,14 +35,10 @@ export default function Home() {
        One-time hydration from localStorage/URL on mount — window is unavailable
        during the server render, so this can't be a lazy useState initializer. */
     const identity = loadIdentity();
-    const params = new URLSearchParams(window.location.search);
-    const codeFromUrl = params.get("code")?.toUpperCase() ?? "";
     if (identity) {
       setName(identity.name);
       setOwnerId(identity.ownerId);
       setScreen("feed");
-    } else if (codeFromUrl) {
-      setInitialCode(codeFromUrl);
     }
     setReady(true);
     /* eslint-enable react-hooks/set-state-in-effect */
@@ -104,7 +99,7 @@ export default function Home() {
 
   return (
     <div className={styles.shell}>
-      {screen === "join" && <JoinScreen initialCode={initialCode} initialName={name} onJoined={handleJoined} />}
+      {screen === "join" && <JoinScreen initialName={name} onJoined={handleJoined} />}
 
       {screen === "feed" && (
         <>

@@ -112,23 +112,6 @@
   margin-left: auto;
 }
 
-.secondary {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  font: 600 13.5px/1 var(--font-body);
-  padding: 16px 18px;
-  background: transparent;
-  color: var(--color-text);
-  border: 2px solid var(--color-divider);
-  cursor: pointer;
-  width: 100%;
-}
-.secondary:hover {
-  background: var(--color-accent-tint);
-  border-color: var(--color-accent);
-}
-
 .info {
   display: flex;
   gap: 11px;

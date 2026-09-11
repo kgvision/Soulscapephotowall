@@ -5,6 +5,7 @@ const KEY = "soulscape_identity";
 export interface Identity {
   ownerId: string;
   name: string;
+  handle?: string;
 }
 
 function randomId() {
@@ -24,9 +25,9 @@ export function loadIdentity(): Identity | null {
   }
 }
 
-export function saveIdentity(name: string): Identity {
+export function saveIdentity(name: string, handle?: string): Identity {
   const existing = loadIdentity();
-  const identity: Identity = { ownerId: existing?.ownerId ?? randomId(), name };
+  const identity: Identity = { ownerId: existing?.ownerId ?? randomId(), name, handle: handle || undefined };
   try {
     window.localStorage.setItem(KEY, JSON.stringify(identity));
   } catch {

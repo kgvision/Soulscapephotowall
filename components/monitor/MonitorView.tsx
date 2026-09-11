@@ -15,11 +15,12 @@ export function MonitorView({ snapshot, now }: { snapshot: Snapshot; now: number
   const queue = queuePhotos(snapshot, 4);
 
   useEffect(() => {
-    const url = `${window.location.origin}/?code=${snapshot.code}`;
+    // No code to carry through anymore — joining no longer asks for one.
+    const url = `${window.location.origin}/`;
     QRCode.toDataURL(url, { margin: 0, width: 240, color: { dark: "#201e1dff", light: "#ffffffff" } })
       .then(setQr)
       .catch(() => setQr(null));
-  }, [snapshot.code]);
+  }, []);
 
   return (
     <div className={styles.wall}>

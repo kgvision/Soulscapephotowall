@@ -1,8 +1,8 @@
-export async function joinShow(code: string, name: string) {
+export async function joinShow(name: string) {
   const res = await fetch("/api/join", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ code, name }),
+    body: JSON.stringify({ name }),
   });
   return res.json() as Promise<{ ok: boolean; error?: string }>;
 }

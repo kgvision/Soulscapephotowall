@@ -1,26 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { CodeCells } from "./CodeCells";
-import { QrScanModal } from "./QrScanModal";
 import styles from "./JoinScreen.module.css";
 import { joinShow } from "@/lib/api";
 import { saveIdentity } from "@/lib/identity";
 
 export function JoinScreen({
-  initialCode,
   initialName,
   onJoined,
 }: {
-  initialCode: string;
   initialName: string;
   onJoined: (name: string) => void;
 }) {
   const [name, setName] = useState(initialName);
-  const [code, setCode] = useState(initialCode);
+  const [handle, setHandle] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [scanning, setScanning] = useState(false);
 
   async function submit() {
     if (submitting) return;
@@ -29,39 +24,15 @@ export function JoinScreen({
       setError("Enter your first name.");
       return;
     }
-    if (code.length < 6) {
-      setError("Enter the full 6-character show code.");
-      return;
-    }
     setSubmitting(true);
-    const res = await joinShow(code, name.trim());
+    const res = await joinShow(name.trim());
     setSubmitting(false);
     if (!res.ok) {
       setError(res.error ?? "Something went wrong.");
       return;
     }
-    saveIdentity(name.trim());
+    saveIdentity(name.trim(), handle.trim());
     onJoined(name.trim());
-  }
-
-  function handleScanResult(text: string) {
-    setScanning(false);
-    try {
-      const url = new URL(text);
-      const fromUrl = url.searchParams.get("code");
-      if (fromUrl) {
-        setCode(fromUrl.toUpperCase());
-        return;
-      }
-    } catch {
-      // not a URL — treat as a raw code below
-    }
-    setCode(
-      text
-        .toUpperCase()
-        .replace(/[^A-Z0-9]/g, "")
-        .slice(0, 6),
-    );
   }
 
   return (
@@ -93,8 +64,18 @@ export function JoinScreen({
         autoComplete="given-name"
       />
 
-      <div className={styles.fieldLabel}>SHOW CODE</div>
-      <CodeCells value={code} onChange={setCode} disabled={submitting} />
+      <label className={styles.fieldLabel} htmlFor="join-handle">
+        / SOCIAL MEDIA HANDLE
+      </label>
+      <input
+        id="join-handle"
+        className={styles.nameInput}
+        value={handle}
+        maxLength={30}
+        placeholder="@yourhandle (optional)"
+        onChange={(e) => setHandle(e.target.value)}
+        autoComplete="off"
+      />
 
       {error && <div className={styles.error}>{error}</div>}
 
@@ -103,17 +84,12 @@ export function JoinScreen({
           <span>{submitting ? "JOINING…" : "JOIN THE WALL"}</span>
           <span className={styles.arrow}>→</span>
         </button>
-        <button type="button" className={styles.secondary} onClick={() => setScanning(true)}>
-          Scan the QR on the monitor instead
-        </button>
       </div>
 
       <div className={styles.info}>
         <div className={styles.infoIcon}>i</div>
         <div className={styles.infoText}>Your first name shows with the photo. A steward can take anything down.</div>
       </div>
-
-      {scanning && <QrScanModal onResult={handleScanResult} onClose={() => setScanning(false)} />}
     </div>
   );
 }
