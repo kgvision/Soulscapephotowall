@@ -13,8 +13,19 @@ export async function uploadPhoto(params: { code: string; author: string; ownerI
   form.set("author", params.author);
   form.set("ownerId", params.ownerId);
   form.set("file", params.blob, "photo.jpg");
-  const res = await fetch("/api/photos", { method: "POST", body: form });
-  return res.json() as Promise<{ ok: boolean; error?: string }>;
+  try {
+    const res = await fetch("/api/photos", { method: "POST", body: form });
+    // A server error can come back as an HTML error page rather than our
+    // JSON shape (e.g. an unhandled exception) — res.json() would throw and,
+    // uncaught, leave the caller's "submitting" state stuck forever.
+    const data = await res.json().catch(() => null);
+    if (!data) {
+      return { ok: false, error: `Upload failed (${res.status}). Check your connection and try again.` };
+    }
+    return data as { ok: boolean; error?: string };
+  } catch {
+    return { ok: false, error: "Couldn't reach the server. Check your connection and try again." };
+  }
 }
 
 export async function approvePhotoRequest(id: string) {

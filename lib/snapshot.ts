@@ -1,7 +1,7 @@
 import { getState, promptTextFor } from "./store";
 
-export function snapshot() {
-  const s = getState();
+export async function snapshot() {
+  const s = await getState();
   return {
     code: s.code,
     moderation: s.moderation,
@@ -10,10 +10,9 @@ export function snapshot() {
     promptText: promptTextFor(s.promptNo),
     hold: s.hold,
     heroIndex: s.heroIndex,
-    heroSince: s.heroSince,
     serverNow: Date.now(),
     photos: s.photos,
   };
 }
 
-export type Snapshot = ReturnType<typeof snapshot>;
+export type Snapshot = Awaited<ReturnType<typeof snapshot>>;

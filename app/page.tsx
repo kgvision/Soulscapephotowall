@@ -78,14 +78,17 @@ export default function Home() {
   async function handlePost() {
     if (!pending || submitting) return;
     setSubmitting(true);
-    const res = await uploadPhoto({ code: state?.code ?? "", author: name, ownerId, blob: pending.blob });
-    setSubmitting(false);
-    if (!res.ok) {
-      window.alert(res.error ?? "Couldn't send that photo — try again.");
-      return;
+    try {
+      const res = await uploadPhoto({ code: state?.code ?? "", author: name, ownerId, blob: pending.blob });
+      if (!res.ok) {
+        window.alert(res.error ?? "Couldn't send that photo — try again.");
+        return;
+      }
+      setPostedAuto(state?.moderation !== "staff");
+      setScreen("posted");
+    } finally {
+      setSubmitting(false);
     }
-    setPostedAuto(state?.moderation !== "staff");
-    setScreen("posted");
   }
 
   const moderationNote = useMemo(() => {

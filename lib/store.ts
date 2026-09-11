@@ -1,4 +1,4 @@
-import { EventEmitter } from "node:events";
+import { kv } from "./kv";
 
 export type PhotoStatus = "live" | "pending" | "removed";
 
@@ -11,18 +11,15 @@ export interface Photo {
   status: PhotoStatus;
   createdAt: number;
   promptNo: number;
-  timesShown: number;
-  msOnScreen: number;
 }
 
-export interface ShowState {
+export interface PublicState {
   code: string;
   moderation: "auto" | "staff";
   showPrompts: boolean;
   promptNo: number;
   hold: boolean;
   heroIndex: number;
-  heroSince: number;
   photos: Photo[];
 }
 
@@ -36,87 +33,93 @@ export const PROMPTS = [
 ];
 
 export const SHOW_CODE = "SOUL26";
-const HERO_INTERVAL_MS = 4200;
 
-interface Globals {
-  __soulscapeStore?: ShowState;
-  __soulscapeEmitter?: EventEmitter;
-  __soulscapeTimer?: ReturnType<typeof setInterval>;
+// No persistent process here (Vercel serverless functions don't run a
+// background timer between requests), so the hero index is derived from
+// wall-clock time instead of advanced by a setInterval — see
+// computeHeroIndex. This is what makes rotation work correctly even though
+// every request can land on a different, freshly-cold instance.
+const ROTATION_INTERVAL_MS = 4200;
+const MAX_PHOTOS = 300;
+
+const META_KEY = "soulscape:meta";
+const PHOTO_IDS_KEY = "soulscape:photo_ids";
+const photoKey = (id: string) => `soulscape:photo:${id}`;
+
+interface Meta {
+  moderation: "auto" | "staff";
+  showPrompts: boolean;
+  promptNo: number;
+  hold: boolean;
+  rotationAnchorMs: number;
+  holdIndex: number;
 }
-const g = globalThis as unknown as Globals;
 
-function createInitialState(): ShowState {
+function defaultMeta(): Meta {
   return {
-    code: SHOW_CODE,
     moderation: "auto",
     showPrompts: true,
     promptNo: 3,
     hold: false,
-    heroIndex: 0,
-    heroSince: Date.now(),
-    photos: [],
+    rotationAnchorMs: Date.now(),
+    holdIndex: 0,
   };
 }
 
-if (!g.__soulscapeStore) g.__soulscapeStore = createInitialState();
-if (!g.__soulscapeEmitter) g.__soulscapeEmitter = new EventEmitter().setMaxListeners(0);
-
-const state = g.__soulscapeStore;
-const emitter = g.__soulscapeEmitter;
-
-export function livePhotos(): Photo[] {
-  return state.photos.filter((p) => p.status === "live");
+function serializeMeta(m: Partial<Meta>): Record<string, string | number> {
+  const out: Record<string, string | number> = {};
+  if (m.moderation !== undefined) out.moderation = m.moderation;
+  if (m.showPrompts !== undefined) out.showPrompts = m.showPrompts ? "1" : "";
+  if (m.promptNo !== undefined) out.promptNo = m.promptNo;
+  if (m.hold !== undefined) out.hold = m.hold ? "1" : "";
+  if (m.rotationAnchorMs !== undefined) out.rotationAnchorMs = m.rotationAnchorMs;
+  if (m.holdIndex !== undefined) out.holdIndex = m.holdIndex;
+  return out;
 }
 
-function clampHero() {
-  const live = livePhotos();
-  if (live.length === 0) {
-    state.heroIndex = 0;
-    return;
-  }
-  state.heroIndex = ((state.heroIndex % live.length) + live.length) % live.length;
+function parseMeta(raw: Record<string, string>): Meta {
+  return {
+    moderation: raw.moderation === "staff" ? "staff" : "auto",
+    showPrompts: raw.showPrompts === "1",
+    promptNo: Number(raw.promptNo) || 3,
+    hold: raw.hold === "1",
+    rotationAnchorMs: Number(raw.rotationAnchorMs) || Date.now(),
+    holdIndex: Number(raw.holdIndex) || 0,
+  };
 }
 
-function setHero(newIndex: number) {
-  const live = livePhotos();
-  if (live.length === 0) {
-    state.heroIndex = 0;
-    return;
-  }
-  const now = Date.now();
-  const prevHero = live[state.heroIndex];
-  if (prevHero) prevHero.msOnScreen += now - state.heroSince;
-  state.heroIndex = ((newIndex % live.length) + live.length) % live.length;
-  state.heroSince = now;
-  const newHero = live[state.heroIndex];
-  if (newHero) newHero.timesShown += 1;
+async function getOrInitMeta(): Promise<Meta> {
+  const raw = await kv.hgetall(META_KEY);
+  if (raw) return parseMeta(raw);
+  const fresh = defaultMeta();
+  await kv.hset(META_KEY, serializeMeta(fresh));
+  return fresh;
 }
 
-function broadcast() {
-  emitter.emit("update");
+function serializePhoto(p: Photo): Record<string, string | number> {
+  return {
+    id: p.id,
+    author: p.author,
+    initials: p.initials,
+    imageUrl: p.imageUrl,
+    ownerId: p.ownerId,
+    status: p.status,
+    createdAt: p.createdAt,
+    promptNo: p.promptNo,
+  };
 }
 
-if (!g.__soulscapeTimer) {
-  g.__soulscapeTimer = setInterval(() => {
-    if (state.hold) return;
-    const live = livePhotos();
-    if (live.length <= 1) return;
-    setHero(state.heroIndex + 1);
-    broadcast();
-  }, HERO_INTERVAL_MS);
-}
-
-export function getState(): ShowState {
-  return state;
-}
-
-export function subscribe(fn: () => void) {
-  emitter.on("update", fn);
-  return () => emitter.off("update", fn);
-}
-
-export function validateCode(code: string) {
-  return code.trim().toUpperCase() === SHOW_CODE;
+function parsePhoto(raw: Record<string, string>): Photo {
+  return {
+    id: raw.id,
+    author: raw.author,
+    initials: raw.initials,
+    imageUrl: raw.imageUrl,
+    ownerId: raw.ownerId,
+    status: raw.status === "pending" || raw.status === "removed" ? raw.status : "live",
+    createdAt: Number(raw.createdAt) || Date.now(),
+    promptNo: Number(raw.promptNo) || 1,
+  };
 }
 
 function initialsFor(name: string) {
@@ -124,8 +127,49 @@ function initialsFor(name: string) {
   return trimmed.slice(0, 2).toUpperCase() || "??";
 }
 
-export function addPhoto(input: { author: string; imageUrl: string; ownerId: string }): Photo {
-  const auto = state.moderation === "auto";
+function computeHeroIndex(meta: Meta, liveCount: number): number {
+  if (liveCount === 0) return 0;
+  if (meta.hold) return ((meta.holdIndex % liveCount) + liveCount) % liveCount;
+  const elapsed = Math.max(0, Date.now() - meta.rotationAnchorMs);
+  const step = Math.floor(elapsed / ROTATION_INTERVAL_MS);
+  return ((step % liveCount) + liveCount) % liveCount;
+}
+
+async function loadPhotos(): Promise<Photo[]> {
+  const ids = await kv.lrange(PHOTO_IDS_KEY, 0, MAX_PHOTOS - 1);
+  const raws = await Promise.all(ids.map((id) => kv.hgetall(photoKey(id))));
+  const photos: Photo[] = [];
+  for (const raw of raws) {
+    if (raw) photos.push(parsePhoto(raw));
+  }
+  return photos;
+}
+
+export function validateCode(code: string) {
+  return code.trim().toUpperCase() === SHOW_CODE;
+}
+
+export function promptTextFor(promptNo: number) {
+  return PROMPTS[(promptNo - 1 + PROMPTS.length) % PROMPTS.length];
+}
+
+export async function getState(): Promise<PublicState> {
+  const [meta, photos] = await Promise.all([getOrInitMeta(), loadPhotos()]);
+  const liveCount = photos.filter((p) => p.status === "live").length;
+  return {
+    code: SHOW_CODE,
+    moderation: meta.moderation,
+    showPrompts: meta.showPrompts,
+    promptNo: meta.promptNo,
+    hold: meta.hold,
+    heroIndex: computeHeroIndex(meta, liveCount),
+    photos,
+  };
+}
+
+export async function addPhoto(input: { author: string; imageUrl: string; ownerId: string }): Promise<Photo> {
+  const meta = await getOrInitMeta();
+  const auto = meta.moderation === "auto";
   const photo: Photo = {
     id: "p_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
     author: input.author,
@@ -134,51 +178,43 @@ export function addPhoto(input: { author: string; imageUrl: string; ownerId: str
     ownerId: input.ownerId,
     status: auto ? "live" : "pending",
     createdAt: Date.now(),
-    promptNo: state.promptNo,
-    timesShown: 0,
-    msOnScreen: 0,
+    promptNo: meta.promptNo,
   };
-  state.photos.unshift(photo);
-  clampHero();
-  broadcast();
+  await kv.hset(photoKey(photo.id), serializePhoto(photo));
+  await kv.lpush(PHOTO_IDS_KEY, photo.id);
   return photo;
 }
 
-export function approvePhoto(id: string) {
-  const p = state.photos.find((p) => p.id === id);
-  if (p && p.status === "pending") {
-    p.status = "live";
-    clampHero();
-    broadcast();
+export async function approvePhoto(id: string) {
+  const raw = await kv.hgetall(photoKey(id));
+  if (raw && raw.status === "pending") {
+    await kv.hset(photoKey(id), { status: "live" });
   }
 }
 
-export function removePhoto(id: string) {
-  const p = state.photos.find((p) => p.id === id);
-  if (p && p.status !== "removed") {
-    const live = livePhotos();
-    const idx = live.findIndex((x) => x.id === id);
-    p.status = "removed";
-    if (idx !== -1 && idx <= state.heroIndex) {
-      const newLive = livePhotos();
-      if (newLive.length > 0) state.heroIndex = state.heroIndex % newLive.length;
-      state.heroSince = Date.now();
-    }
-    clampHero();
-    broadcast();
+export async function removePhoto(id: string) {
+  const raw = await kv.hgetall(photoKey(id));
+  if (raw && raw.status !== "removed") {
+    await kv.hset(photoKey(id), { status: "removed" });
   }
 }
 
-export function toggleHold() {
-  state.hold = !state.hold;
-  broadcast();
+export async function toggleHold() {
+  const meta = await getOrInitMeta();
+  if (meta.hold) {
+    // Releasing — resume the rotation fresh from index 0 rather than trying
+    // to reconstruct exactly where it left off.
+    await kv.hset(META_KEY, serializeMeta({ hold: false, rotationAnchorMs: Date.now() }));
+  } else {
+    const photos = await loadPhotos();
+    const liveCount = photos.filter((p) => p.status === "live").length;
+    const idx = computeHeroIndex(meta, liveCount);
+    await kv.hset(META_KEY, serializeMeta({ hold: true, holdIndex: idx }));
+  }
 }
 
-export function pushNextPrompt() {
-  state.promptNo = (state.promptNo % PROMPTS.length) + 1;
-  broadcast();
-}
-
-export function promptTextFor(promptNo: number) {
-  return PROMPTS[(promptNo - 1 + PROMPTS.length) % PROMPTS.length];
+export async function pushNextPrompt() {
+  const meta = await getOrInitMeta();
+  const next = (meta.promptNo % PROMPTS.length) + 1;
+  await kv.hset(META_KEY, serializeMeta({ promptNo: next }));
 }

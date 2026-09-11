@@ -2,7 +2,7 @@
 
 import styles from "./MineScreen.module.css";
 import type { Snapshot } from "@/lib/snapshot";
-import { formatAgo, formatOnScreen, initialsFor } from "@/lib/format";
+import { formatAgo, initialsFor } from "@/lib/format";
 
 type Photo = Snapshot["photos"][number];
 
@@ -24,19 +24,11 @@ function statusMeta(p: Photo, now: number) {
       meta: `${promptLabel} · taken down`,
     };
   }
-  if (p.timesShown > 0) {
-    return {
-      label: "ON THE WALL",
-      tagBg: "var(--color-accent)",
-      tagFg: "#fff",
-      meta: `${promptLabel} · shown ${p.timesShown}× · ${formatOnScreen(p.msOnScreen)}`,
-    };
-  }
   return {
     label: "ON THE WALL",
     tagBg: "var(--color-accent)",
     tagFg: "#fff",
-    meta: `${promptLabel} · waiting to appear`,
+    meta: `${promptLabel} · added ${formatAgo(p.createdAt, now)}`,
   };
 }
 
