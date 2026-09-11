@@ -7,10 +7,17 @@ export async function joinShow(name: string) {
   return res.json() as Promise<{ ok: boolean; error?: string }>;
 }
 
-export async function uploadPhoto(params: { code: string; author: string; ownerId: string; blob: Blob }) {
+export async function uploadPhoto(params: {
+  code: string;
+  author: string;
+  handle?: string;
+  ownerId: string;
+  blob: Blob;
+}) {
   const form = new FormData();
   form.set("code", params.code);
   form.set("author", params.author);
+  if (params.handle) form.set("handle", params.handle);
   form.set("ownerId", params.ownerId);
   form.set("file", params.blob, "photo.jpg");
   try {

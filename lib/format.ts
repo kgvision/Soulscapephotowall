@@ -12,3 +12,7 @@ export function initialsFor(name: string) {
   const trimmed = name.trim();
   return trimmed.slice(0, 2).toUpperCase() || "??";
 }
+
+export function authorLabel(author: string, handle?: string) {
+  return handle ? `${author} / ${handle}` : author;
+}

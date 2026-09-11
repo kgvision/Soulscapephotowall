@@ -5,6 +5,7 @@ export type PhotoStatus = "live" | "pending" | "removed";
 export interface Photo {
   id: string;
   author: string;
+  handle?: string;
   initials: string;
   imageUrl: string;
   ownerId: string;
@@ -100,6 +101,7 @@ function serializePhoto(p: Photo): Record<string, string | number> {
   return {
     id: p.id,
     author: p.author,
+    handle: p.handle ?? "",
     initials: p.initials,
     imageUrl: p.imageUrl,
     ownerId: p.ownerId,
@@ -113,6 +115,7 @@ function parsePhoto(raw: Record<string, string>): Photo {
   return {
     id: raw.id,
     author: raw.author,
+    handle: raw.handle || undefined,
     initials: raw.initials,
     imageUrl: raw.imageUrl,
     ownerId: raw.ownerId,
@@ -167,12 +170,18 @@ export async function getState(): Promise<PublicState> {
   };
 }
 
-export async function addPhoto(input: { author: string; imageUrl: string; ownerId: string }): Promise<Photo> {
+export async function addPhoto(input: {
+  author: string;
+  handle?: string;
+  imageUrl: string;
+  ownerId: string;
+}): Promise<Photo> {
   const meta = await getOrInitMeta();
   const auto = meta.moderation === "auto";
   const photo: Photo = {
     id: "p_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
     author: input.author,
+    handle: input.handle || undefined,
     initials: initialsFor(input.author),
     imageUrl: input.imageUrl,
     ownerId: input.ownerId,

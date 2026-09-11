@@ -74,6 +74,7 @@ export async function POST(req: Request) {
 
   const code = String(form.get("code") ?? "");
   const author = String(form.get("author") ?? "").trim();
+  const handle = String(form.get("handle") ?? "").trim().slice(0, 30);
   const ownerId = String(form.get("ownerId") ?? "").trim();
   const file = form.get("file");
 
@@ -106,7 +107,7 @@ export async function POST(req: Request) {
     const filename = `${id}.${ext}`;
     const bytes = Buffer.from(await file.arrayBuffer());
     const imageUrl = await storePhoto(filename, bytes, file.type);
-    const photo = await addPhoto({ author, imageUrl, ownerId });
+    const photo = await addPhoto({ author, handle, imageUrl, ownerId });
     return NextResponse.json({ ok: true, photo });
   } catch (err) {
     console.error("photo upload failed", err);

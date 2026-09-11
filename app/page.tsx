@@ -19,6 +19,7 @@ export default function Home() {
   const { state, now } = useLiveState();
   const [screen, setScreen] = useState<Screen>("join");
   const [name, setName] = useState("");
+  const [handle, setHandle] = useState("");
   const [ownerId, setOwnerId] = useState("");
   const [pending, setPending] = useState<{ blob: Blob; url: string } | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -37,6 +38,7 @@ export default function Home() {
     const identity = loadIdentity();
     if (identity) {
       setName(identity.name);
+      setHandle(identity.handle ?? "");
       setOwnerId(identity.ownerId);
       setScreen("feed");
     }
@@ -50,9 +52,10 @@ export default function Home() {
     };
   }, [pending]);
 
-  function handleJoined(joinedName: string) {
+  function handleJoined(joinedName: string, joinedHandle: string) {
     const identity = loadIdentity();
     setName(joinedName);
+    setHandle(joinedHandle);
     if (identity) setOwnerId(identity.ownerId);
     setScreen("feed");
   }
@@ -74,7 +77,7 @@ export default function Home() {
     if (!pending || submitting) return;
     setSubmitting(true);
     try {
-      const res = await uploadPhoto({ code: state?.code ?? "", author: name, ownerId, blob: pending.blob });
+      const res = await uploadPhoto({ code: state?.code ?? "", author: name, handle, ownerId, blob: pending.blob });
       if (!res.ok) {
         window.alert(res.error ?? "Couldn't send that photo — try again.");
         return;
@@ -116,6 +119,7 @@ export default function Home() {
           moderationNote={moderationNote}
           submitting={submitting}
           onReshoot={openCapture}
+          onClose={() => setScreen("feed")}
           onPost={handlePost}
         />
       )}

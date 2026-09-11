@@ -9,6 +9,7 @@ export function ReviewScreen({
   moderationNote,
   submitting,
   onReshoot,
+  onClose,
   onPost,
 }: {
   previewUrl: string;
@@ -17,15 +18,18 @@ export function ReviewScreen({
   moderationNote: string;
   submitting: boolean;
   onReshoot: () => void;
+  onClose: () => void;
   onPost: () => void;
 }) {
   return (
     <div className={styles.screen}>
       <div className={styles.topBar}>
         <button type="button" className={styles.reshoot} onClick={onReshoot} disabled={submitting}>
-          ← RESHOOT
+          ← BACK
         </button>
-        <div className={styles.kicker}>LAST LOOK</div>
+        <button type="button" className={styles.close} onClick={onClose} disabled={submitting}>
+          ✕ CLOSE
+        </button>
       </div>
       <div className={styles.rule} />
       <div className={styles.body}>

@@ -22,11 +22,28 @@
   margin-left: -4px;
 }
 
+.headerRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
 .wordmark {
   font: 700 9.5px/1 var(--font-mono);
   letter-spacing: 0.18em;
   color: var(--color-accent-deep);
   text-align: right;
+}
+
+.adminLink {
+  font: 700 9.5px/1 var(--font-mono);
+  letter-spacing: 0.18em;
+  color: var(--color-neutral-600);
+  text-decoration: none;
+}
+.adminLink:hover {
+  color: var(--color-accent);
 }
 
 .rule {

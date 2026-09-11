@@ -5,7 +5,7 @@ import QRCode from "qrcode";
 import styles from "./MonitorView.module.css";
 import type { Snapshot } from "@/lib/snapshot";
 import { heroPhoto, queuePhotos, liveOnly } from "@/lib/deriveView";
-import { formatAgo } from "@/lib/format";
+import { authorLabel, formatAgo } from "@/lib/format";
 import { Watermark } from "@/components/shared/Watermark";
 
 export function MonitorView({ snapshot, now }: { snapshot: Snapshot; now: number }) {
@@ -51,7 +51,10 @@ export function MonitorView({ snapshot, now }: { snapshot: Snapshot; now: number
               </div>
               <div className={styles.heroIdentity}>
                 <div className={styles.heroInitials}>{hero.initials}</div>
-                <div className={styles.heroAuthor}>{hero.author}</div>
+                <div className={styles.heroNameCol}>
+                  <div className={styles.heroAuthor}>{hero.author}</div>
+                  {hero.handle && <div className={styles.heroHandle}>{hero.handle}</div>}
+                </div>
               </div>
             </div>
           )}
@@ -64,7 +67,7 @@ export function MonitorView({ snapshot, now }: { snapshot: Snapshot; now: number
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={p.imageUrl} alt="" className={styles.queueImg} />
                 <Watermark size={26} />
-                <div className={styles.queueCaption}>{p.author}</div>
+                <div className={styles.queueCaption}>{authorLabel(p.author, p.handle)}</div>
               </div>
             ))}
             {Array.from({ length: Math.max(0, 4 - queue.length) }).map((_, i) => (

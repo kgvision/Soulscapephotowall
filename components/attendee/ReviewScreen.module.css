@@ -31,11 +31,24 @@
   opacity: 0.6;
   cursor: default;
 }
-.kicker {
-  font: 700 9px/1 var(--font-mono);
-  letter-spacing: 0.16em;
-  color: var(--color-neutral-700);
+.close {
   margin-left: auto;
+  font: 700 11px/1 var(--font-mono);
+  letter-spacing: 0.1em;
+  background: transparent;
+  border: 2px solid var(--color-divider);
+  color: var(--color-text);
+  padding: 8px 10px;
+  cursor: pointer;
+}
+.close:hover {
+  background: var(--color-ink);
+  color: #fff;
+  border-color: var(--color-ink);
+}
+.close:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 .rule {

@@ -3,7 +3,7 @@
 import styles from "./FeedScreen.module.css";
 import type { Snapshot } from "@/lib/snapshot";
 import { heroPhoto, gridPhotos, liveOnly } from "@/lib/deriveView";
-import { formatAgo } from "@/lib/format";
+import { authorLabel, formatAgo } from "@/lib/format";
 import { Watermark } from "@/components/shared/Watermark";
 
 export function FeedScreen({
@@ -51,7 +51,7 @@ export function FeedScreen({
           )}
           {hero && (
             <div className={styles.heroMeta}>
-              <span className={styles.heroAuthor}>{hero.author}</span>
+              <span className={styles.heroAuthor}>{authorLabel(hero.author, hero.handle)}</span>
               <span className={styles.heroAgo}>{formatAgo(hero.createdAt, now)}</span>
             </div>
           )}
@@ -71,7 +71,7 @@ export function FeedScreen({
               <img src={p.imageUrl} alt="" className={styles.tileImg} />
               <Watermark size={22} />
               <div className={styles.tileCaption}>
-                {p.author} · {formatAgo(p.createdAt, now)}
+                {authorLabel(p.author, p.handle)} · {formatAgo(p.createdAt, now)}
               </div>
             </div>
           ))}

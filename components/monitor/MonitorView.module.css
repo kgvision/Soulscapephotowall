@@ -90,6 +90,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
+  min-width: 0;
 }
 .heroInitials {
   width: 52px;
@@ -102,9 +103,25 @@
   justify-content: center;
   font: 700 19px/1 var(--font-heading);
 }
+.heroNameCol {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
 .heroAuthor {
   font: 800 40px/1 var(--font-heading);
   letter-spacing: -0.03em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.heroHandle {
+  font: 600 16px/1 var(--font-mono);
+  color: var(--color-accent-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .queueCol {
@@ -147,6 +164,9 @@
   padding: 10px 14px;
   background: linear-gradient(to top, rgba(32, 30, 29, 0.9), transparent);
   font: 600 12px/1.25 var(--font-heading);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .queueItemEmpty {
   border-bottom: 2px solid rgba(255, 255, 255, 0.45);

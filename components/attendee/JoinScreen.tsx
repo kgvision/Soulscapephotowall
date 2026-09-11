@@ -5,34 +5,40 @@ import styles from "./JoinScreen.module.css";
 import { joinShow } from "@/lib/api";
 import { saveIdentity } from "@/lib/identity";
 
+function parseNameAndHandle(raw: string): { name: string; handle: string } {
+  const idx = raw.indexOf("/");
+  if (idx === -1) return { name: raw.trim(), handle: "" };
+  return { name: raw.slice(0, idx).trim(), handle: raw.slice(idx + 1).trim() };
+}
+
 export function JoinScreen({
   initialName,
   onJoined,
 }: {
   initialName: string;
-  onJoined: (name: string) => void;
+  onJoined: (name: string, handle: string) => void;
 }) {
-  const [name, setName] = useState(initialName);
-  const [handle, setHandle] = useState("");
+  const [combined, setCombined] = useState(initialName);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   async function submit() {
     if (submitting) return;
     setError(null);
-    if (!name.trim()) {
+    const { name, handle } = parseNameAndHandle(combined);
+    if (!name) {
       setError("Enter your first name.");
       return;
     }
     setSubmitting(true);
-    const res = await joinShow(name.trim());
+    const res = await joinShow(name);
     setSubmitting(false);
     if (!res.ok) {
       setError(res.error ?? "Something went wrong.");
       return;
     }
-    saveIdentity(name.trim(), handle.trim());
-    onJoined(name.trim());
+    saveIdentity(name, handle);
+    onJoined(name, handle);
   }
 
   return (
@@ -40,10 +46,15 @@ export function JoinScreen({
       <div className={styles.header}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/brand/soulscape-logo.png" alt="Soulscape Art Collective" width={132} height={90} className={styles.logo} />
-        <div className={styles.wordmark}>
-          PHOTO
-          <br />
-          WALL
+        <div className={styles.headerRight}>
+          <div className={styles.wordmark}>
+            PHOTO
+            <br />
+            WALL
+          </div>
+          <a href="/steward" className={styles.adminLink}>
+            ADMIN
+          </a>
         </div>
       </div>
       <div className={styles.rule} />
@@ -52,28 +63,15 @@ export function JoinScreen({
       <p className={styles.subtitle}>Shoot it and it goes up on the monitor!</p>
 
       <label className={styles.fieldLabel} htmlFor="join-name">
-        YOUR FIRST NAME
+        YOUR FIRST NAME / SOCIAL HANDLE
       </label>
       <input
         id="join-name"
         className={styles.nameInput}
-        value={name}
-        maxLength={24}
-        placeholder="e.g. Mara"
-        onChange={(e) => setName(e.target.value)}
-        autoComplete="given-name"
-      />
-
-      <label className={styles.fieldLabel} htmlFor="join-handle">
-        / SOCIAL MEDIA HANDLE
-      </label>
-      <input
-        id="join-handle"
-        className={styles.nameInput}
-        value={handle}
-        maxLength={30}
-        placeholder="@yourhandle (optional)"
-        onChange={(e) => setHandle(e.target.value)}
+        value={combined}
+        maxLength={40}
+        placeholder="e.g. Mara / @mara.paints"
+        onChange={(e) => setCombined(e.target.value)}
         autoComplete="off"
       />
 
