@@ -14,30 +14,48 @@ const EXT_BY_TYPE: Record<string, string> = {
 };
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
-// A Blob store connected to the project via the dashboard's "Connect
-// Project" flow authenticates over OIDC and injects BLOB_STORE_ID (no
+
+// A Blob store connected via the dashboard's "Connect Project" flow
+// authenticates over OIDC and injects a *_STORE_ID var (no
 // BLOB_READ_WRITE_TOKEN at all — that's the older, manually-copied-token
-// path). put() auto-detects either one; we just need to route into the Blob
-// path whenever *either* signal is present instead of requiring the token.
-const hasBlobStore = Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
+// path). Vercel numbers these BLOB_STORE_ID, BLOB2_STORE_ID, BLOB3_STORE_ID,
+// ... whenever more than one Blob-shaped connection has ever existed on the
+// project (even a since-removed one reserves the plain, unnumbered name) —
+// so a hardcoded `BLOB_STORE_ID` check can miss a perfectly valid connected
+// store. Scan for whichever numbered variant is actually present instead.
+function findBlobEnvVar(suffix: "STORE_ID" | "READ_WRITE_TOKEN"): string | undefined {
+  const pattern = new RegExp(`^BLOB\\d*_${suffix}$`);
+  const key = Object.keys(process.env).find((k) => pattern.test(k));
+  return key ? process.env[key] : undefined;
+}
+
+const blobStoreId = findBlobEnvVar("STORE_ID");
+const blobToken = findBlobEnvVar("READ_WRITE_TOKEN");
+const hasBlobStore = Boolean(blobStoreId || blobToken);
 
 // Runs once per cold instance start — check Vercel's Runtime Logs for this
 // line to confirm a deploy actually picked up the Blob store connection
 // rather than silently trying (and failing) to write to the read-only
 // filesystem.
 if (hasBlobStore) {
-  console.log("[photos] using Vercel Blob for storage");
+  console.log(`[photos] using Vercel Blob for storage${blobStoreId ? ` (store id ${blobStoreId})` : ""}`);
 } else {
   console.warn(
-    "[photos] no Blob store detected (BLOB_READ_WRITE_TOKEN or BLOB_STORE_ID) — falling back to local " +
-      "disk, which will fail on a deployed Vercel serverless function: connect a Blob store in the " +
-      "Vercel dashboard's Storage tab.",
+    "[photos] no Blob store detected (no BLOB*_STORE_ID or BLOB*_READ_WRITE_TOKEN env var) — falling " +
+      "back to local disk, which will fail on a deployed Vercel serverless function: connect a Blob " +
+      "store in the Vercel dashboard's Storage tab.",
   );
 }
 
 async function storePhoto(filename: string, bytes: Buffer, contentType: string): Promise<string> {
   if (hasBlobStore) {
-    const blob = await put(filename, bytes, { access: "public", contentType, addRandomSuffix: false });
+    const blob = await put(filename, bytes, {
+      access: "public",
+      contentType,
+      addRandomSuffix: false,
+      ...(blobStoreId ? { storeId: blobStoreId } : {}),
+      ...(blobToken ? { token: blobToken } : {}),
+    });
     return blob.url;
   }
   // Local-dev fallback only — a deployed Vercel serverless function's
